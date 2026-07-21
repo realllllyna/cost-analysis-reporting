@@ -1,0 +1,6 @@
+pandas
+requests
+sqlalchemy
+pg8000
+python-dotenv
+openpyxl
