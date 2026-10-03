@@ -75,8 +75,6 @@ class Config:
     NAV_PAGE_SIZE = _get_int_env("NAV_PAGE_SIZE", 1000)
     NAV_TIMEOUT_SECONDS = _get_int_env("NAV_TIMEOUT_SECONDS", 600)
     NAV_START_DATE = os.getenv("NAV_START_DATE", "2024-01-01")
-    NAV_FULL_REFRESH = _get_bool_env("NAV_FULL_REFRESH", False)
-    NAV_INCREMENTAL_DAYS = _get_int_env("NAV_INCREMENTAL_DAYS", 14)
 
     # Database setup (runs SQL 01-04 with DROP statements)
     RUN_DB_SETUP = _get_bool_env("RUN_DB_SETUP", False)
@@ -124,5 +122,3 @@ class Config:
             raise ValueError("NAV_PAGE_SIZE must be greater than 0.")
         if cls.NAV_TIMEOUT_SECONDS <= 0:
             raise ValueError("NAV_TIMEOUT_SECONDS must be greater than 0.")
-        if cls.NAV_INCREMENTAL_DAYS < 0:
-            raise ValueError("NAV_INCREMENTAL_DAYS must not be negative.")

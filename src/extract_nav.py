@@ -1,5 +1,3 @@
-from datetime import date, timedelta
-
 import pandas as pd
 
 from config import Config
@@ -22,17 +20,9 @@ def _get_top_param(top: int | None = None) -> int | None:
 
 
 def get_transaction_start_date() -> str:
-    """
-    Start date for transaction tables.
+    """Start date for the full load of the transaction tables (NAV_START_DATE)."""
 
-    Full refresh: NAV_START_DATE. Incremental: today - NAV_INCREMENTAL_DAYS.
-    """
-
-    if Config.NAV_FULL_REFRESH:
-        return Config.NAV_START_DATE
-
-    start = date.today() - timedelta(days=Config.NAV_INCREMENTAL_DAYS)
-    return start.isoformat()
+    return Config.NAV_START_DATE
 
 
 def _posting_date_filter() -> dict[str, str]:

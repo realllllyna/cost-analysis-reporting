@@ -97,8 +97,7 @@ def run_etl() -> None:
     transaction_start_date = get_transaction_start_date()
     print("Running ETL process...")
     print(f"RUN_DB_SETUP: {Config.RUN_DB_SETUP}")
-    print(f"NAV_FULL_REFRESH: {Config.NAV_FULL_REFRESH}")
-    print(f"Transaction start date: {transaction_start_date}")
+    print(f"Full load from: {transaction_start_date}")
 
     # Extract NAV
     print("Extracting NAV data...")
@@ -151,8 +150,6 @@ def run_etl() -> None:
         cost_centers_df=cost_centers,
         financial_statement_layout_df=financial_statement_layout,
         plan_df=plan_values,
-        full_refresh=Config.NAV_FULL_REFRESH,
-        incremental_start_date=transaction_start_date,
     )
 
     # Build mart and refresh views

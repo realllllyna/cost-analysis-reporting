@@ -43,7 +43,6 @@ docs/   Architektur, ETL-Prozess, Datenmodell
 | Variable | Erster Lauf | Danach | Bedeutung |
 |---|---|---|---|
 | `RUN_DB_SETUP` | `true` | **`false`** | `true` legt alle Tabellen neu an (mit `DROP`!) |
-| `NAV_FULL_REFRESH` | `true` | `true` / `false` | Voll-Last vs. inkrementell (letzte `NAV_INCREMENTAL_DAYS` Tage) |
 | `NAV_START_DATE` | `2024-01-01` | – | Startdatum der Voll-Last |
 
 > ⚠️ Nach dem ersten erfolgreichen Lauf `RUN_DB_SETUP=false` setzen – sonst werden

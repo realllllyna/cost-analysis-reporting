@@ -1,7 +1,7 @@
 """Load transformed data into PostgreSQL staging and mart schemas.
 
 This module supports:
-- full or date-based incremental staging refreshes,
+- full-load staging refreshes,
 - loading master data and Excel data into staging,
 - rebuilding all mart dimensions and facts,
 - G/L entries with their original positive or negative sign,
@@ -186,55 +186,13 @@ def truncate_table(
 
 
 
-def delete_from_date(
-    schema_name: str,
-    table_name: str,
-    date_column: str,
-    start_date: str,
-) -> None:
-    """Delete staging rows whose date is on or after ``start_date``."""
-
-    engine = get_engine()
-    target = _qualified_table(schema_name, table_name)
-    quoted_date_column = _quote_identifier(date_column)
-
-    with engine.begin() as conn:
-        result = conn.execute(
-            text(
-                f"""
-                DELETE FROM {target}
-                WHERE {quoted_date_column} >= :start_date;
-                """
-            ),
-            {"start_date": start_date},
-        )
-
-    print(
-        f"Deleted {result.rowcount} rows from {schema_name}.{table_name} "
-        f"where {date_column} >= {start_date}"
-    )
-
-
-
 def refresh_transaction_table(
     df: pd.DataFrame | None,
     table_name: str,
-    date_column: str,
-    full_refresh: bool,
-    incremental_start_date: str,
 ) -> None:
-    """Refresh a transaction staging table fully or from a start date."""
+    """Reload a transaction staging table as a full load (truncate + load)."""
 
-    if full_refresh:
-        truncate_table("staging", table_name)
-    else:
-        delete_from_date(
-            schema_name="staging",
-            table_name=table_name,
-            date_column=date_column,
-            start_date=incremental_start_date,
-        )
-
+    truncate_table("staging", table_name)
     load_dataframe(df, table_name, "staging")
 
 
@@ -253,32 +211,12 @@ def load_staging_tables(
     cost_centers_df: pd.DataFrame,
     financial_statement_layout_df: pd.DataFrame,
     plan_df: pd.DataFrame,
-    full_refresh: bool,
-    incremental_start_date: str,
 ) -> None:
-    """Load all transformed NAV and Excel datasets into staging."""
+    """Load all transformed NAV and Excel datasets into staging (full load)."""
 
-    refresh_transaction_table(
-        gl_df,
-        "stg_gl_ledger_entries",
-        "posting_date",
-        full_refresh,
-        incremental_start_date,
-    )
-    refresh_transaction_table(
-        vendor_ledger_df,
-        "stg_vendor_ledger_entries",
-        "posting_date",
-        full_refresh,
-        incremental_start_date,
-    )
-    refresh_transaction_table(
-        customer_ledger_df,
-        "stg_customer_ledger_entries",
-        "posting_date",
-        full_refresh,
-        incremental_start_date,
-    )
+    refresh_transaction_table(gl_df, "stg_gl_ledger_entries")
+    refresh_transaction_table(vendor_ledger_df, "stg_vendor_ledger_entries")
+    refresh_transaction_table(customer_ledger_df, "stg_customer_ledger_entries")
 
     master_tables: list[tuple[pd.DataFrame, str]] = [
         (vendors_df, "stg_vendors"),

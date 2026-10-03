@@ -76,8 +76,8 @@ NAV. Die Namen stehen in der `.env` und können dort angepasst werden.
 - **NAV** (`extract_nav.py`): Für jeden Service wird die OData-URL
   `.../Company('ETC Solutions GmbH')/<Service>` aufgerufen und seitenweise
   (`odata.maxpagesize`) ausgelesen. Für die Transaktionstabellen (Sach-,
-  Kreditoren-, Debitorenposten) wird ein Filter `Posting_Date ge <Startdatum>`
-  gesetzt (siehe Refresh-Modus).
+  Kreditoren-, Debitorenposten) wird ein Filter `Posting_Date ge <NAV_START_DATE>`
+  gesetzt, sodass die Voll-Last ab dem konfigurierten Startdatum geladen wird.
 - **Excel** (`extract_excel.py`): Die beiden Dateien werden mit `pandas`/`openpyxl`
   gelesen.
 
@@ -117,12 +117,15 @@ Wichtige abgeleitete Felder:
 
 `load.py` schreibt die DataFrames in das Schema `staging`:
 
-- **Transaktionstabellen** (Sach-/Kreditoren-/Debitorenposten):
-  - **Full Refresh**: Tabelle wird geleert (`TRUNCATE`) und neu geladen.
-  - **Incremental**: nur Zeilen ab dem Startdatum werden gelöscht und neu geladen
-    (`delete_from_date`).
+- **Transaktionstabellen** (Sach-/Kreditoren-/Debitorenposten): Tabelle wird
+  geleert (`TRUNCATE`) und als **Voll-Last** neu geladen (ab `NAV_START_DATE`).
 - **Stammdaten & Excel** (Kreditoren, Debitoren, Projekte, Kostenstellen,
-  GuV-Struktur, Plan): immer `TRUNCATE` + Voll-Last.
+  GuV-Struktur, Plan): ebenfalls `TRUNCATE` + Voll-Last.
+
+Die Voll-Last wird gewählt, weil sie einfach und immer vollständig konsistent mit
+dem Quellsystem ist. Der ETL-Lauf ist vom Reporting entkoppelt und kann
+zeitgesteuert (z. B. nachts) ausgeführt werden, sodass die Laufzeit den Nutzer
+nicht betrifft.
 
 Staging ist die **Rohschicht**: sie hält alle relevanten Quellspalten, auch solche,
 die im Mart nicht verwendet werden.
@@ -179,13 +182,11 @@ die Ist-Buchungen aber täglich sind.
 
 ---
 
-## Refresh-Modus (`.env`)
+## Lade-Einstellungen (`.env`)
 
 | Variable | Bedeutung |
 |---|---|
-| `NAV_FULL_REFRESH` | `true` = Voll-Last ab `NAV_START_DATE`; `false` = inkrementell |
 | `NAV_START_DATE` | Startdatum der Voll-Last (z. B. `2024-01-01`) |
-| `NAV_INCREMENTAL_DAYS` | inkrementell: heute minus X Tage werden neu geladen |
 | `RUN_DB_SETUP` | `true` = SQL-Dateien `01`–`04` vor dem ETL ausführen (mit `DROP`) |
 
 ---
